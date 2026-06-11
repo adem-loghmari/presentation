@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GetSeat — End of Studies Defense · Adam Hmida Loghmari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#f3f6fc;
+    --ink:#14182b;        /* primary text — strong contrast on light bg */
+    --muted:#454e6e;
+    --faint:#7e87a6;
+    --violet:#6d28d9;     /* deep accent (text / borders) */
+    --teal:#0c93a0;       /* deep accent (text / borders) */
+    --vbright:#8B5CF6;    /* brand decorative */
+    --tbright:#43CED7;    /* brand decorative */
+    --line:rgba(20,25,55,.12);
+    --line2:rgba(20,25,55,.06);
+    --card:#ffffff;
+    --shadow:0 6px 22px rgba(22,28,60,.07);
+    --grad:linear-gradient(120deg,#7c3aed 0%,#0aa3ae 100%);
+    --grad-soft:linear-gradient(120deg,rgba(124,58,237,.12),rgba(12,147,160,.12));
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  /* soft mesh background (subtle on light bg) */
+  .mesh{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .mesh::before,.mesh::after{
+    content:"";position:absolute;width:58vw;height:58vw;border-radius:50%;
+    filter:blur(100px);opacity:.12;
+  }
+  .mesh::before{background:var(--vbright);top:-18vw;left:-12vw;animation:drift1 22s ease-in-out infinite alternate}
+  .mesh::after{background:var(--tbright);bottom:-22vw;right:-14vw;animation:drift2 26s ease-in-out infinite alternate}
+  @keyframes drift1{to{transform:translate(12vw,10vh) scale(1.15)}}
+  @keyframes drift2{to{transform:translate(-10vw,-8vh) scale(1.1)}}
+  .grid-overlay{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(20,25,55,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(20,25,55,.045) 1px,transparent 1px);
+    background-size:48px 48px;mask-image:radial-gradient(ellipse 80% 70% at 50% 45%,#000 25%,transparent 100%);opacity:1}
+
+  /* deck */
+  #deck{position:relative;z-index:2;width:100vw;height:100vh}
+  .slide{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    padding:5vh 7vw;opacity:0;pointer-events:none;
+    transform:translateX(60px) scale(.99);
+    transition:opacity .5s ease,transform .55s cubic-bezier(.22,.61,.36,1);
+  }
+  .slide.active{opacity:1;pointer-events:auto;transform:translateX(0) scale(1)}
+  .slide.past{opacity:0;transform:translateX(-60px) scale(.99)}
+
+  /* chrome */
+  .chip{
+    display:inline-flex;align-items:center;gap:.5rem;align-self:flex-start;
+    font:700 .74rem/1 'Inter';letter-spacing:.15em;text-transform:uppercase;
+    color:#4a2fae;padding:.55rem .95rem;border-radius:999px;
+    background:var(--grad-soft);border:1px solid rgba(124,58,237,.22);
+  }
+  .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--grad)}
+  h1.title{font-family:'Sora';font-weight:800;line-height:1.02;letter-spacing:-.02em}
+  h2.head{font-family:'Sora';font-weight:700;font-size:clamp(1.8rem,3.7vw,3.1rem);line-height:1.06;letter-spacing:-.015em;margin:1.6vh 0 .4vh;color:var(--ink)}
+  .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:clamp(.98rem,1.35vw,1.18rem);font-weight:400;max-width:62ch}
+  .sub b{color:var(--ink);font-weight:600}
+  .lead{color:var(--muted);font-size:clamp(1.02rem,1.5vw,1.28rem);max-width:64ch;line-height:1.55}
+  code{font-family:'JetBrains Mono';font-size:.86em;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.18);padding:.05em .35em;border-radius:6px;color:#5b34c2}
+
+  /* footer + BIG page number */
+  .foot{position:fixed;z-index:5;bottom:2.2vh;left:7vw;right:7vw;display:flex;align-items:flex-end;justify-content:space-between}
+  .foot .brand{font-family:'Sora';font-weight:700;font-size:.95rem;color:var(--ink);display:flex;align-items:center;gap:.55rem}
+  .foot .brand b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+  .foot .brand .tagline{font-family:'Inter';font-weight:500;font-size:.74rem;color:var(--faint);letter-spacing:.02em}
+  .pageno{font-family:'Sora';display:flex;align-items:baseline;gap:.12rem;line-height:1}
+  .pageno b{font-size:clamp(2rem,3.4vw,3rem);font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-variant-numeric:tabular-nums}
+  .pageno i{font-style:normal;font-size:1.1rem;color:var(--faint);font-weight:600}
+  .pageno .tot{font-size:1.1rem;color:var(--faint);font-weight:600;font-variant-numeric:tabular-nums}
+  .progress{position:fixed;z-index:5;left:0;top:0;height:4px;background:var(--grad);width:0;transition:width .45s ease}
+
+  /* layout helpers */
+  .body{margin-top:auto;margin-bottom:auto;width:100%}
+  .center{align-items:center;justify-content:center;text-align:center}
+  .center .chip{align-self:center}
+  .grid{display:grid;gap:1.1rem}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.4rem;box-shadow:var(--shadow);transition:border-color .3s,transform .3s,box-shadow .3s}
+  .card:hover{border-color:rgba(124,58,237,.45);transform:translateY(-3px);box-shadow:0 12px 30px rgba(22,28,60,.10)}
+  .card .k{font-family:'Sora';font-weight:700;font-size:1.04rem;margin-bottom:.35rem;display:flex;align-items:center;gap:.55rem;color:var(--ink)}
+  .card .v{color:var(--muted);font-size:.92rem;line-height:1.5}
+  .card .v b{color:var(--ink)}
+  .card .v i{color:var(--muted)}
+  .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--grad-soft);border:1px solid rgba(124,58,237,.18);font-size:1.05rem;flex:none}
+
+  ul.clean{list-style:none;display:flex;flex-direction:column;gap:.9rem;margin-top:1.6vh}
+  ul.clean li{display:flex;gap:.85rem;align-items:flex-start;font-size:clamp(1rem,1.4vw,1.2rem);color:#2a3252;line-height:1.45}
+  ul.clean li .b{margin-top:.5rem;width:9px;height:9px;border-radius:2px;background:var(--grad);flex:none;transform:rotate(45deg)}
+  ul.clean li b{color:var(--ink);font-weight:700}
+  ul.clean li span.m{color:var(--muted)}
+
+  /* stat row */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem;margin-top:2vh}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1.2rem;box-shadow:var(--shadow)}
+  .stat .n{font-family:'Sora';font-weight:800;font-size:clamp(2rem,4.4vw,3.2rem);line-height:1;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat .l{color:var(--muted);font-size:.84rem;margin-top:.5rem;letter-spacing:.01em}
+
+  /* hierarchy / flow */
+  .flow{display:flex;align-items:stretch;gap:.7rem;flex-wrap:wrap;margin-top:2vh}
+  .node{flex:1;min-width:120px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1rem;text-align:center;box-shadow:var(--shadow)}
+  .node .t{font-family:'Sora';font-weight:700;font-size:1rem;color:var(--ink)}
+  .node .d{color:var(--faint);font-size:.78rem;margin-top:.3rem}
+  .arrow{align-self:center;color:var(--teal);font-size:1.4rem;font-weight:700}
+
+  .tree{display:flex;flex-direction:column;gap:.7rem;margin-top:2vh}
+  .branch{display:flex;align-items:center;gap:1rem}
+  .branch .lvl{font:600 .72rem 'JetBrains Mono';color:var(--faint);width:64px;flex:none;text-align:right}
+  .branch .box{flex:1;background:var(--card);border:1px solid var(--line);border-left:4px solid;border-radius:0 12px 12px 0;padding:.85rem 1.1rem;box-shadow:var(--shadow)}
+  .branch .box .t{font-family:'Sora';font-weight:700;color:var(--ink)}
+  .branch .box .d{color:var(--muted);font-size:.86rem;margin-top:.15rem}
+
+  /* tech pills */
+  .pills{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:2vh}
+  .pill{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.9rem 1.15rem;display:flex;gap:.75rem;align-items:center;box-shadow:var(--shadow)}
+  .pill .ic{width:32px;height:32px;font-size:.95rem}
+  .pill .t{font-family:'Sora';font-weight:600;font-size:.96rem;color:var(--ink)}
+  .pill .s{color:var(--faint);font-size:.76rem}
+
+  /* timeline */
+  .timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:.8rem;margin-top:2.4vh;position:relative}
+  .timeline::before{content:"";position:absolute;top:16px;left:4%;right:4%;height:3px;background:var(--grad);opacity:.45;border-radius:3px}
+  .sp{text-align:center}
+  .sp .dot{width:34px;height:34px;border-radius:50%;margin:0 auto .8rem;background:#fff;border:3px solid var(--violet);display:grid;place-items:center;font:800 1rem 'Sora';color:var(--violet);position:relative;z-index:2;box-shadow:var(--shadow)}
+  .sp .when{font:600 .76rem 'JetBrains Mono';color:var(--teal)}
+  .sp .what{color:var(--muted);font-size:.8rem;margin-top:.4rem;line-height:1.4}
+
+  /* code block (light) */
+  .code{font-family:'JetBrains Mono';font-size:.84rem;background:#eef1fa;border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.3rem;color:#2c3354;line-height:1.6;overflow:hidden;margin-top:1.5vh;box-shadow:var(--shadow)}
+  .code .c{color:var(--faint)}
+  .code .key{color:#6d28d9;font-weight:600}
+  .code .str{color:#0c8a96;font-weight:600}
+
+  /* big quote / question */
+  .question{font-family:'Sora';font-weight:700;font-size:clamp(1.9rem,4.7vw,3.7rem);line-height:1.13;letter-spacing:-.02em;max-width:18ch;color:var(--ink)}
+  .question .grad{font-weight:800}
+
+  /* fragments */
+  .fragment{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.61,.36,1)}
+  .fragment.visible{opacity:1;transform:none}
+
+  /* ===== TITLE SLIDE ===== */
+  .title-slide{padding-top:3vh}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:1.4rem;width:100%}
+  .uni{text-align:center;font-size:clamp(.7rem,1.05vw,.88rem);color:var(--muted);line-height:1.55}
+  .uni b{display:block;color:var(--ink);font-weight:700}
+  .logo{display:flex;flex-direction:column;justify-content:center;min-width:150px}
+  .logo.right{align-items:flex-end;text-align:right}
+  .logo img{max-height:60px;max-width:210px;object-fit:contain;display:none}
+  .lf .lf-main{font-family:'Sora';font-weight:800;font-size:1.18rem;letter-spacing:.01em;color:var(--ink)}
+  .lf .lf-sub{font-size:.58rem;color:var(--faint);letter-spacing:.1em;text-transform:uppercase;margin-top:3px;max-width:200px}
+  .doc-line{font:600 .7rem 'Inter';letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:.6vh}
+
+  .by{margin-top:1.9vh}
+  .by .lbl{font:700 .68rem 'Inter';letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .by .who{font-family:'Sora';font-weight:800;font-size:clamp(1.15rem,2.1vw,1.6rem);color:var(--ink);margin-top:.35rem;letter-spacing:-.01em}
+
+  .jury{display:grid;grid-template-columns:1fr 1fr;gap:.8rem 3rem;margin:1.9vh auto 0;max-width:48rem;text-align:left}
+  .jgroup .ghead{font:700 .66rem 'Inter';letter-spacing:.16em;text-transform:uppercase;color:var(--violet);margin-bottom:.5rem;padding-bottom:.4rem;border-bottom:2px solid rgba(124,58,237,.18)}
+  .jrow{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;padding:.3rem 0}
+  .jrow .nm{font-weight:700;color:var(--ink);font-size:.96rem}
+  .jrow .role{color:var(--faint);font-size:.78rem;white-space:nowrap}
+
+  .date{display:inline-flex;align-items:center;gap:.5rem;margin-top:2vh;font:600 .92rem 'JetBrains Mono';color:#fff;background:var(--grad);padding:.5rem 1.1rem;border-radius:999px;box-shadow:0 6px 18px rgba(124,58,237,.25)}
+
+  .seatrow{display:flex;gap:7px;margin-top:2.4vh}
+  .seatrow i{width:18px;height:18px;border-radius:5px;background:#e6eaf5;border:1px solid var(--line);display:block}
+  .seatrow i.v{background:linear-gradient(135deg,#8B5CF6,#6d28d9);border-color:transparent}
+  .seatrow i.t{background:linear-gradient(135deg,#43CED7,#0c93a0);border-color:transparent}
+
+  /* agenda list */
+  .agenda{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem 2.4rem;margin-top:2.4vh}
+  .agenda .it{display:flex;gap:1rem;align-items:center;padding:.9rem 0;border-bottom:1px solid var(--line)}
+  .agenda .it .num{font-family:'JetBrains Mono';font-weight:600;color:var(--teal);font-size:.95rem;width:34px}
+  .agenda .it .tt{font-family:'Sora';font-weight:600;font-size:1.08rem;color:var(--ink)}
+  .agenda .it .ds{color:var(--faint);font-size:.8rem;margin-left:auto}
+
+  .hint{position:fixed;z-index:6;bottom:2.4vh;left:50%;transform:translateX(-50%);color:var(--faint);font-size:.72rem;letter-spacing:.04em;opacity:.8;display:flex;gap:.4rem;align-items:center}
+  kbd{font-family:'JetBrains Mono';font-size:.68rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:.12rem .42rem;color:var(--muted);background:#fff}
+
+  .navbtn{position:fixed;z-index:6;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.85);color:var(--ink);display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(8px);transition:.25s;font-size:1.2rem;box-shadow:var(--shadow)}
+  .navbtn:hover{border-color:var(--violet);color:var(--violet)}
+  #prev{left:1.6vw}#next{right:1.6vw}
+
+  .tag{display:inline-block;font:600 .76rem 'JetBrains Mono';color:var(--teal);background:rgba(12,147,160,.10);border:1px solid rgba(12,147,160,.3);padding:.22rem .6rem;border-radius:7px}
+  .two{display:grid;grid-template-columns:1.1fr .9fr;gap:2.4rem;align-items:center}
+  @media(max-width:820px){.two{grid-template-columns:1fr}.g4,.g3,.timeline,.agenda,.jury{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="mesh"></div>
+<div class="grid-overlay"></div>
+<div class="progress" id="bar"></div>
+
+<button class="navbtn" id="prev" aria-label="Previous">‹</button>
+<button class="navbtn" id="next" aria-label="Next">›</button>
+
+<div id="deck">
+
+  <!-- 1 · TITLE -->
+  <section class="slide title-slide center">
+    <div class="topbar">
+      <span class="logo">
+        <img src="assets/enetcom.png" alt="ENET'COM" onload="this.style.display='block';this.nextElementSibling.style.display='none'">
+        <span class="lf"><span class="lf-main"><span style="color:#E8731C">ENET</span><span style="color:#1f3a73">'COM</span></span><span class="lf-sub">Électronique &amp; Télécommunications · Sfax</span></span>
+      </span>
+      <div class="uni">
+        Republic of Tunisia
+        <b>Ministry of Higher Education and Scientific Research</b>
+        University of Sfax · ENET'COM
+      </div>
+      <span class="logo right">
+        <img src="assets/united-systema.png" alt="United Systema" onload="this.style.display='block';this.nextElementSibling.style.display='none'">
+        <span class="lf"><span class="lf-main" style="letter-spacing:.1em">UNITED SYSTEMA</span><span class="lf-sub">connecting knowledge</span></span>
+      </span>
+    </div>
+
+    <div class="body" style="max-width:64rem">
+      <span class="chip" style="align-self:center"><span class="dot"></span>End of Studies Project · 2025–2026</span>
+      <div class="doc-line">National Telecommunications Engineering Diploma</div>
+      <h1 class="title grad" style="font-size:clamp(2.4rem,7vw,5rem);margin-top:1.6vh">GetSeat</h1>
+      <p class="sub" style="margin:.8vh auto 0;font-size:clamp(1.05rem,2vw,1.45rem);color:var(--ink);font-weight:500">
+        Real-time Event Management &amp; Ticketing SaaS
+      </p>
+      <div class="seatrow" style="justify-content:center">
+        <i class="v"></i><i class="v"></i><i></i><i class="t"></i><i class="t"></i><i></i><i class="v"></i><i></i><i class="t"></i><i class="v"></i><i></i><i class="t"></i>
+      </div>
+
+      <div class="by"><div class="lbl">Presented by</div><div class="who">Adam Hmida Loghmari</div></div>
+
+      <div class="jury">
+        <div class="jgroup">
+          <div class="ghead">Supervised by</div>
+          <div class="jrow"><span class="nm">Dr. Nidhal Ben Amor</span><span class="role">Academic Supervisor</span></div>
+          <div class="jrow"><span class="nm">Mr. Anis Jerbi</span><span class="role">Industrial Supervisor</span></div>
+        </div>
+        <div class="jgroup">
+          <div class="ghead">Examination panel</div>
+          <div class="jrow"><span class="nm">Dr. Moncef Triki</span><span class="role">President</span></div>
+          <div class="jrow"><span class="nm">Dr. Ikram Amous</span><span class="role">Examiner</span></div>
+        </div>
+      </div>
+
+      <div class="date">📅 Defended on 12 June 2026</div>
+    </div>
+  </section>
+
+  <!-- 2 · AGENDA -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Agenda</span>
+    <div class="body">
+      <h2 class="head">What we'll <span class="grad">walk through</span></h2>
+      <div class="agenda">
+        <div class="it fragment"><span class="num">01</span><span class="tt">Context &amp; Problem</span><span class="ds">the ticketing gap</span></div>
+        <div class="it fragment"><span class="num">02</span><span class="tt">Stack &amp; Architecture</span><span class="ds">headless SaaS</span></div>
+        <div class="it fragment"><span class="num">03</span><span class="tt">Data Model &amp; Access Control</span><span class="ds">hierarchy + RBAC</span></div>
+        <div class="it fragment"><span class="num">04</span><span class="tt">The Venue Builder</span><span class="ds">interactive canvas</span></div>
+        <div class="it fragment"><span class="num">05</span><span class="tt">Reservation &amp; Payment Engine</span><span class="ds">real-time + money</span></div>
+        <div class="it fragment"><span class="num">06</span><span class="tt">Security · B2B SDK · DevOps</span><span class="ds">production hardening</span></div>
+        <div class="it fragment"><span class="num">07</span><span class="tt">Demonstration</span><span class="ds">live</span></div>
+        <div class="it fragment"><span class="num">08</span><span class="tt">Conclusion &amp; Perspectives</span><span class="ds">what's next</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · HOST COMPANY -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Host Company</span>
+    <div class="body">
+      <h2 class="head">United <span class="grad">Systema</span></h2>
+      <p class="lead">A technology-driven firm built on the belief that technology should be universally accessible — an enabler of growth for clients across industries.</p>
+      <div class="grid g3" style="margin-top:2.4vh">
+        <div class="card fragment"><div class="k"><span class="ic">🛠️</span>Web &amp; Software</div><div class="v">Tailor-made web apps and business software, from requirements to production deployment.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">☁️</span>Private Cloud</div><div class="v">Dedicated infrastructure giving clients full control over their data, independent of public cloud.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">🔁</span>Digital Transformation</div><div class="v">Turning legacy, paper-based, fragmented workflows into unified automated pipelines.</div></div>
+      </div>
+      <p class="sub fragment" style="margin-top:2.4vh"><span class="tag">GetSeat</span> &nbsp;was built here as a production-ready SaaS, deployed live at <b>getseat.dev</b>.</p>
+    </div>
+  </section>
+
+  <!-- 4 · CONTEXT / PROBLEM -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Context</span>
+    <div class="body">
+      <h2 class="head">Generic e-commerce <span class="grad">breaks</span> on live events</h2>
+      <p class="lead">Events are spatial and real-time. Off-the-shelf platforms aren't.</p>
+      <ul class="clean">
+        <li class="fragment"><span class="b"></span><span><b>Fragmented tools</b> <span class="m">— organizers juggle separate apps for design, sales, and door scanning.</span></span></li>
+        <li class="fragment"><span class="b"></span><span><b>No spatial rendering</b> <span class="m">— standard platforms can't draw custom seating charts.</span></span></li>
+        <li class="fragment"><span class="b"></span><span><b>Race conditions</b> <span class="m">— a wide seat-lock window causes double-booking, a catastrophic failure mode.</span></span></li>
+        <li class="fragment"><span class="b"></span><span><b>Walled gardens</b> <span class="m">— high commissions and no embeddable API to sell on your own site.</span></span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5 · PROBLEMATIC -->
+  <section class="slide center">
+    <span class="chip"><span class="dot"></span>Problematic</span>
+    <div class="body">
+      <p class="question" style="margin:0 auto">
+        How do you let an organizer <span class="grad">draw a venue once</span>, and let the world book it <span class="grad">in real time</span> — without ever double-booking a seat?
+      </p>
+    </div>
+  </section>
+
+  <!-- 6 · OBJECTIVES -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Objectives</span>
+    <div class="body">
+      <h2 class="head">One seamless <span class="grad">pipeline</span></h2>
+      <p class="lead">What the organizer draws, the guest can book. Then scale it to a B2B product.</p>
+      <div class="flow">
+        <div class="node fragment"><div class="t">Design</div><div class="d">interactive Venue Builder</div></div>
+        <div class="arrow fragment">→</div>
+        <div class="node fragment"><div class="t">Persist</div><div class="d">canvas → relational DB</div></div>
+        <div class="arrow fragment">→</div>
+        <div class="node fragment"><div class="t">Reserve</div><div class="d">real-time, concurrency-safe</div></div>
+        <div class="arrow fragment">→</div>
+        <div class="node fragment"><div class="t">Pay &amp; Enter</div><div class="d">verified payment → QR ticket</div></div>
+        <div class="arrow fragment">→</div>
+        <div class="node fragment"><div class="t">Embed</div><div class="d">B2B SDK + iframes</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · TECH STACK -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Technological Stack</span>
+    <div class="body">
+      <h2 class="head">A modern, <span class="grad">decoupled</span> stack</h2>
+      <div class="pills">
+        <div class="pill fragment"><span class="ic">⚛️</span><div><div class="t">Next.js 16 · React 19</div><div class="s">hybrid SSR/CSR · MUI</div></div></div>
+        <div class="pill fragment"><span class="ic">🎨</span><div><div class="t">Konva.js</div><div class="s">WebGL-accelerated 2D canvas</div></div></div>
+        <div class="pill fragment"><span class="ic">🐘</span><div><div class="t">Laravel 12 · PHP 8.3</div><div class="s">Eloquent · ACID transactions</div></div></div>
+        <div class="pill fragment"><span class="ic">⚡</span><div><div class="t">Pusher</div><div class="s">WebSocket broadcasting · Echo</div></div></div>
+        <div class="pill fragment"><span class="ic">💳</span><div><div class="t">SkipCash</div><div class="s">HMAC-SHA256 signed webhooks</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · ARCHITECTURE -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Architecture</span>
+    <div class="body">
+      <h2 class="head">Headless: <span class="grad">browser draws, server rules</span></h2>
+      <div class="flow" style="align-items:stretch">
+        <div class="node fragment" style="flex:1.2"><div class="t">Next.js Frontend</div><div class="d">Venue Builder · Reservation Portal · iframe embeds</div></div>
+        <div class="arrow fragment">⇄</div>
+        <div class="node fragment" style="flex:1.4"><div class="t">Laravel REST API + WebSockets</div><div class="d">business logic · auth · broadcasting</div></div>
+        <div class="arrow fragment">⇄</div>
+        <div class="node fragment"><div class="t">MySQL</div><div class="d">ACID · pessimistic locks</div></div>
+      </div>
+      <ul class="clean" style="margin-top:2.2vh">
+        <li class="fragment"><span class="b"></span><span><b>Independent scaling</b> <span class="m">of client and API.</span></span></li>
+        <li class="fragment"><span class="b"></span><span><b>WebSockets replace polling</b> <span class="m">— this is what eliminates double-booking, live.</span></span></li>
+        <li class="fragment"><span class="b"></span><span><b>One logic layer</b> <span class="m">serving web clients, iframe widgets, and a partner SDK alike.</span></span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 9 · METHODOLOGY + KPI -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Methodology &amp; Metrics</span>
+    <div class="body">
+      <h2 class="head">Five Agile <span class="grad">sprints</span> · validated by KPIs</h2>
+      <div class="timeline">
+        <div class="sp fragment"><div class="dot">1</div><div class="when">Feb 02–16</div><div class="what">API structure · Sanctum auth · roles · core migrations</div></div>
+        <div class="sp fragment"><div class="dot">2</div><div class="when">Feb 17–Mar 09</div><div class="what">Konva canvas research · event policies · staff invites</div></div>
+        <div class="sp fragment"><div class="dot">3</div><div class="when">Mar 10–Apr 02</div><div class="what">Hook refactor · Magic Wand · multi-floor · blueprints</div></div>
+        <div class="sp fragment"><div class="dot">4</div><div class="when">Apr 03–21</div><div class="what">Minimap · Best-Available · SkipCash · QR · PDF tickets</div></div>
+        <div class="sp fragment"><div class="dot">5</div><div class="when">Apr 22–May 12</div><div class="what">Cookie security · Pusher · culling · B2B SDK · CD pipeline</div></div>
+      </div>
+      <div class="stats fragment">
+        <div class="stat"><div class="n">100%</div><div class="l">double-booking prevented</div></div>
+        <div class="stat"><div class="n">&lt;200ms</div><div class="l">seat-event broadcast</div></div>
+        <div class="stat"><div class="n">60<span style="font-size:1.2rem">fps</span></div><div class="l">10,000+ live shapes</div></div>
+        <div class="stat"><div class="n">&lt;100ms</div><div class="l">availability API</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · DATA MODEL -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Data Model</span>
+    <div class="body">
+      <h2 class="head">A spatial &amp; temporal <span class="grad">hierarchy</span></h2>
+      <div class="tree">
+        <div class="branch fragment"><span class="lvl">root</span><div class="box" style="border-left-color:#7c3aed"><div class="t">Event</div><div class="d">owner · UTC dates · encrypted payment secrets · staff pivot</div></div></div>
+        <div class="branch fragment"><span class="lvl">layout</span><div class="box" style="border-left-color:#7758d6"><div class="t">VenueTemplate → Venue</div><div class="d">master canvas JSON, then an event-specific deployment</div></div></div>
+        <div class="branch fragment"><span class="lvl">session</span><div class="box" style="border-left-color:#3a8fc4"><div class="t">TimeSlot</div><div class="d">owns Locations — availability is isolated per session</div></div></div>
+        <div class="branch fragment"><span class="lvl">unit</span><div class="box" style="border-left-color:#0c93a0"><div class="t">Location</div><div class="d">a bookable seat / table / standing area · shape_id · capacity</div></div></div>
+      </div>
+      <p class="sub fragment" style="margin-top:2vh">Transactional side: <b>Reservation → Order → Transaction → Ticket → ScanLog</b> — the full financial lifecycle.</p>
+    </div>
+  </section>
+
+  <!-- 11 · RBAC -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Access Control</span>
+    <div class="body">
+      <h2 class="head">Two layers of <span class="grad">authority</span></h2>
+      <div class="grid g2" style="margin-top:1.5vh">
+        <div class="card fragment"><div class="k"><span class="ic">🌐</span>Platform roles (Spatie)</div><div class="v"><b>user</b> · <b>support</b> (read-only + refunds) · <b>super-admin</b> (full authority).</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">🎟️</span>Event roles (pivot)</div><div class="v"><b>viewer</b> — dashboards, check-ins, scanning. <b>editor</b> — inherits viewer + venue write access. Enforced via Laravel Policies.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">✉️</span>Magic-link invitations</div><div class="v">64-char token, 7-day expiry. Existing users linked instantly; new users onboarded through a secure link.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">🛡️</span>Venue deletion workflow</div><div class="v">Two-step: an editor <i>requests</i>, the owner <i>approves</i>. No venue with live tickets dies without consent.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 · VENUE BUILDER INTRO -->
+  <section class="slide center">
+    <span class="chip"><span class="dot"></span>Chapter 3 · The Technical Nucleus</span>
+    <div class="body">
+      <h2 class="head" style="font-size:clamp(2.2rem,5.5vw,4rem)">The <span class="grad">Venue Builder</span></h2>
+      <p class="lead" style="margin:1vh auto 0">A production-grade, interactive 2D map editor built on Konva.js inside React 19 — drawing seats, zones, floors and prices that flow straight into the database.</p>
+      <div class="seatrow" style="justify-content:center;margin-top:3vh">
+        <i class="v"></i><i class="v"></i><i class="v"></i><i class="t"></i><i class="t"></i><i></i><i class="t"></i><i class="t"></i><i class="v"></i><i class="v"></i><i></i><i class="t"></i><i class="v"></i><i class="t"></i>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 · VENUE BUILDER INTERNALS -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Venue Builder · Performance</span>
+    <div class="body">
+      <h2 class="head">Sustaining <span class="grad">60 FPS</span> at stadium scale</h2>
+      <p class="lead">A stadium map can hold 5,000+ interactive nodes. Naïve React would freeze. Three disciplines keep it fluid:</p>
+      <div class="grid g3" style="margin-top:2vh">
+        <div class="card fragment"><div class="k"><span class="ic">📚</span>Layer separation</div><div class="v">Static grid, interactive shapes, and ephemeral drawing previews live on independent Konva layers.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">👁️</span>Viewport culling</div><div class="v">Only shapes inside the current viewport are mounted — the rest carry zero render or hit-test cost.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">🧠</span>Memoization</div><div class="v"><code>React.memo</code> + <code>useMemo</code> + <code>useCallback</code> so only what changed re-renders.</div></div>
+      </div>
+      <p class="sub fragment" style="margin-top:2vh">Orchestrated by <b>16 specialized hooks</b> — one behavioral concern each (state, drawing, drag-snap, transform, navigation, sync…).</p>
+    </div>
+  </section>
+
+  <!-- 14 · SMART TOOLS -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Venue Builder · Smart Tooling</span>
+    <div class="body">
+      <h2 class="head">Tools that <span class="grad">erase the tedium</span></h2>
+      <div class="grid g2">
+        <div class="card fragment"><div class="k"><span class="ic">🪄</span>Magic-Wand auto-labeling</div><div class="v">Sorts selected seats into rows by geometry, then assigns Row A/B/C and seat numbers — 500 seats labeled in under a second.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">🤖</span>AI text-to-map</div><div class="v">A natural-language prompt → an LLM constrained to a strict JSON schema → a full foundational layout injected into the canvas.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">🗺️</span>Minimap &amp; grid snapping</div><div class="v">Draggable viewport rectangle for navigation; 10-px grid snap keeps every seat perfectly aligned.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">🏢</span>Multi-floor + blueprints</div><div class="v">Floor tabs and zone drill-down; trace over an uploaded architectural blueprint, then fade it out.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15 · SERIALIZATION -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Canvas → Database</span>
+    <div class="body">
+      <h2 class="head">From <span class="grad">JSON blob</span> to relational rows</h2>
+      <div class="two">
+        <div>
+          <ul class="clean">
+            <li class="fragment"><span class="b"></span><span>The whole canvas serializes to one <b>canvas_data</b> JSON — floors, categories, shapes. Cheap to write while designing.</span></li>
+            <li class="fragment"><span class="b"></span><span>On publish, <b>syncLocations()</b> migrates it in three passes: <span class="m">categories → PriceTiers, shapes → Locations, then LocationPrice links.</span></span></li>
+            <li class="fragment"><span class="b"></span><span><b>updateOrCreate</b> by stable IDs — orphaned tiers and locations are pruned automatically.</span></li>
+          </ul>
+        </div>
+        <div class="code fragment">
+<span class="c">// canvas_data</span><br>
+{ <span class="key">"shapes"</span>: [<br>
+&nbsp;&nbsp;{ <span class="key">"id"</span>:<span class="str">"seat-1"</span>, <span class="key">"type"</span>:<span class="str">"seat"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"categoryId"</span>:<span class="str">"cat_vip"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"name"</span>:<span class="str">"A1"</span>, <span class="key">"x"</span>:120, <span class="key">"y"</span>:120 }<br>
+] }<br><br>
+<span class="c">// → Location + LocationPrice rows</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 16 · RESERVATION ENGINE -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Reservation Engine</span>
+    <div class="body">
+      <h2 class="head">Pessimistic locking <span class="grad">kills the race</span></h2>
+      <div class="two">
+        <div>
+          <ul class="clean">
+            <li class="fragment"><span class="b"></span><span>A booking opens an <b>ACID transaction</b> and calls <b>lockForUpdate()</b> on the seat row.</span></li>
+            <li class="fragment"><span class="b"></span><span>MySQL <b>blocks every concurrent request</b> until commit. The second arrival sees the new count and gets <b>409 Conflict</b>.</span></li>
+            <li class="fragment"><span class="b"></span><span>A held seat becomes a <b>Reservation</b> with a 10-minute expiry, auto-pruned by Laravel's scheduler.</span></li>
+            <li class="fragment"><span class="b"></span><span>Availability is computed with aggregate counts — <b>sold / locked / mine / remaining</b> — in under 100ms.</span></li>
+          </ul>
+        </div>
+        <div class="code fragment">
+<span class="key">DB</span>::beginTransaction();<br>
+<span class="key">$loc</span> = Location::lockForUpdate()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;->find(<span class="key">$id</span>);<br><br>
+<span class="key">if</span> (held + sold + qty &gt; capacity)<br>
+&nbsp;&nbsp;<span class="key">return</span> <span class="str">409</span>;<br><br>
+Reservation::create([...]);<br>
+<span class="key">DB</span>::commit();
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 17 · REAL-TIME -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Real-Time Sync</span>
+    <div class="body">
+      <h2 class="head">Everyone sees it <span class="grad">at once</span></h2>
+      <div class="flow">
+        <div class="node fragment"><div class="t">SeatLocked</div><div class="d">a seat is reserved</div></div>
+        <div class="node fragment"><div class="t">SeatUnlocked</div><div class="d">hold released / expired</div></div>
+        <div class="node fragment"><div class="t">SeatSold</div><div class="d">payment confirmed</div></div>
+      </div>
+      <ul class="clean" style="margin-top:2.2vh">
+        <li class="fragment"><span class="b"></span><span>Broadcast on a <b>per-timeslot channel</b> via Pusher — the evening show never bleeds into the morning's.</span></li>
+        <li class="fragment"><span class="b"></span><span>Laravel Echo flips a seat <b>available → locked in milliseconds</b> on every connected screen.</span></li>
+        <li class="fragment"><span class="b"></span><span>Client-side <b>cart machine</b> runs the 10-min countdown; <b>"Best Available"</b> auto-picks the best contiguous block.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 18 · PAYMENTS -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Payments</span>
+    <div class="body">
+      <h2 class="head">Never trust the <span class="grad">browser</span></h2>
+      <div class="flow">
+        <div class="node fragment"><div class="t">Initiate</div><div class="d">HMAC-SHA256 signed payload → SkipCash</div></div>
+        <div class="arrow fragment">→</div>
+        <div class="node fragment"><div class="t">Redirect</div><div class="d">guest pays on gateway</div></div>
+        <div class="arrow fragment">→</div>
+        <div class="node fragment"><div class="t">Verify</div><div class="d">server-to-server status poll</div></div>
+        <div class="arrow fragment">→</div>
+        <div class="node fragment"><div class="t">Fulfill</div><div class="d">tickets issued only on confirmation</div></div>
+      </div>
+      <ul class="clean" style="margin-top:2.2vh">
+        <li class="fragment"><span class="b"></span><span>Payment secrets are <b>encrypted at rest</b>; status is <b>polled directly from the provider</b>, never self-reported by the client.</span></li>
+        <li class="fragment"><span class="b"></span><span>A <b>pluggable layer</b> — a <code>TransactionStatus</code> enum normalizes any gateway. Free events use <b>native checkout</b>, no redirect.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 19 · TICKETS & CHECK-IN -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Tickets &amp; Check-In</span>
+    <div class="body">
+      <h2 class="head">From <span class="grad">payment to the door</span></h2>
+      <div class="grid g4">
+        <div class="card fragment"><div class="k"><span class="ic">🎫</span>Issue</div><div class="v">Reservations convert to Tickets with a unique UUID <b>barcode_hash</b>; SeatSold broadcast.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">📧</span>Deliver</div><div class="v">Queued HTML email + a server-rendered <b>PDF ticket</b> download.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">📷</span>Scan</div><div class="v">Browser-based <b>QR scanner</b> — no hardware. Backend rejects invalid / already-scanned.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">📊</span>Analyze</div><div class="v">Live dashboard: capacity, revenue, 7-day velocity, ticket distribution.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 20 · SECURITY -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Security Hardening</span>
+    <div class="body">
+      <h2 class="head">Closing the <span class="grad">attack surface</span></h2>
+      <ul class="clean">
+        <li class="fragment"><span class="b"></span><span><b>JWT in localStorage → HTTP-only cookies.</b> <span class="m">The session token becomes physically invisible to JavaScript — the XSS theft vector is gone.</span></span></li>
+        <li class="fragment"><span class="b"></span><span><b>CSRF handshake</b> <span class="m">— a csrf-cookie call seeds the XSRF token before every mutating request.</span></span></li>
+        <li class="fragment"><span class="b"></span><span><b>Google OAuth 2.0</b> via Socialite <span class="m">— frictionless sign-in.</span></span></li>
+        <li class="fragment"><span class="b"></span><span><b>Embed tokens</b> <span class="m">— a scoped Bearer path for iframe contexts where cookies can't follow.</span></span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 21 · B2B SDK -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>B2B Developer SDK</span>
+    <div class="body">
+      <h2 class="head">GetSeat as a <span class="grad">white-label engine</span></h2>
+      <div class="two">
+        <div>
+          <ul class="clean">
+            <li class="fragment"><span class="b"></span><span><b>API keys</b> scoped to <code>partner:api</code>; shown once, never stored.</span></li>
+            <li class="fragment"><span class="b"></span><span>Five server-to-server endpoints — <b>publish venues, confirm orders, inject pricing.</b></span></li>
+            <li class="fragment"><span class="b"></span><span><b>Shadow users</b>: a partner's customer is silently proxied through a managed identity — no GetSeat account needed.</span></li>
+            <li class="fragment"><span class="b"></span><span><b>Embeddable iframes</b>: drop the reservation portal or full builder into any site.</span></li>
+          </ul>
+        </div>
+        <div class="code fragment">
+<span class="c">// partner → embed session</span><br>
+POST <span class="str">/v1/embed/session</span><br>
+{ <span class="key">"external_user_id"</span>:<span class="str">"crm_8842"</span> }<br><br>
+<span class="c">// → 2h scoped embed_token</span><br>
+&lt;iframe src=<span class="str">"/embed/reserve<br>&nbsp;&nbsp;?token=…"</span>&gt;
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 22 · DEVOPS -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>DevOps Automation</span>
+    <div class="body">
+      <h2 class="head">Push to <code>dev</code> → <span class="grad">live in &lt; 4 min</span></h2>
+      <div class="timeline" style="grid-template-columns:repeat(4,1fr)">
+        <div class="sp fragment"><div class="dot">1</div><div class="when">Init</div><div class="what">PHP 8.3 + Node 22, inject secrets, composer install</div></div>
+        <div class="sp fragment"><div class="dot">2</div><div class="when">Build</div><div class="what">npm ci + Next.js production build</div></div>
+        <div class="sp fragment"><div class="dot">3</div><div class="when">Transfer</div><div class="what">rsync over SSH — public out/ + private backend/</div></div>
+        <div class="sp fragment"><div class="dot">4</div><div class="when">Execute</div><div class="what">cache rebuild + migrate --force on the server</div></div>
+      </div>
+      <p class="sub fragment" style="margin-top:2.4vh">Plus a three-tier <b>admin panel</b> (users · events · venues) and a real-time <b>notification engine</b> keeping teams in sync.</p>
+    </div>
+  </section>
+
+  <!-- 23 · DEMO -->
+  <section class="slide center">
+    <span class="chip"><span class="dot"></span>Demonstration</span>
+    <div class="body">
+      <h2 class="head" style="font-size:clamp(2.4rem,6vw,4.5rem)">Live <span class="grad">demo</span></h2>
+      <p class="lead" style="margin:1vh auto 0">Design a venue · publish · reserve in real time across two screens · pay · scan the QR at the door.</p>
+      <div style="margin-top:3vh"><span class="tag">getseat.dev</span></div>
+    </div>
+  </section>
+
+  <!-- 24 · CONCLUSION -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Conclusion</span>
+    <div class="body">
+      <h2 class="head">A production-deployed <span class="grad">full-stack SaaS</span></h2>
+      <div class="grid g2" style="margin-top:1.5vh">
+        <div class="card fragment"><div class="k"><span class="ic">🎨</span>Draw → book pipeline</div><div class="v">An interactive canvas that serializes into a strict relational schema on publish.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">🔒</span>Zero double-booking</div><div class="v">Pessimistic locks + real-time WebSocket sync, validated under concurrency.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">💳</span>Trustless payments</div><div class="v">Server-side verification, UUID barcodes, PDF + email tickets, QR check-in.</div></div>
+        <div class="card fragment"><div class="k"><span class="ic">🧩</span>Commercial-ready</div><div class="v">B2B SDK, shadow users, embeds, admin panel, automated CD.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 25 · PERSPECTIVES -->
+  <section class="slide">
+    <span class="chip"><span class="dot"></span>Perspectives</span>
+    <div class="body">
+      <h2 class="head">Where GetSeat <span class="grad">goes next</span></h2>
+      <ul class="clean">
+        <li class="fragment"><span class="b"></span><span><b>Mobile app</b> <span class="m">— React Native for guests &amp; staff, riding the existing REST API.</span></span></li>
+        <li class="fragment"><span class="b"></span><span><b>Multi-gateway payments</b> <span class="m">— Stripe / Flouci / Konnect via the existing interface, no controller changes.</span></span></li>
+        <li class="fragment"><span class="b"></span><span><b>AI dynamic pricing</b> <span class="m">— tiers that react to real-time demand velocity.</span></span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 26 · THANK YOU -->
+  <section class="slide center">
+    <div class="body">
+      <span class="chip" style="align-self:center"><span class="dot"></span>Thank you</span>
+      <h1 class="title" style="font-size:clamp(2.4rem,7vw,5.5rem);margin-top:2.6vh;color:var(--ink)">Questions <span class="grad">&amp;</span> Discussion</h1>
+      <div class="seatrow" style="justify-content:center;margin-top:3vh">
+        <i class="t"></i><i class="v"></i><i></i><i class="v"></i><i class="t"></i><i class="v"></i><i></i><i class="t"></i><i class="v"></i><i class="t"></i>
+      </div>
+      <p class="sub" style="margin:3vh auto 0;text-align:center">Adam Hmida Loghmari &nbsp;·&nbsp; <b>GetSeat</b> — Real-time Event Management &amp; Ticketing SaaS &nbsp;·&nbsp; ENET'COM 2025–2026</p>
+    </div>
+  </section>
+
+  <!-- 27 · THANK YOU -->
+  <section class="slide center">
+    <div class="body">
+      <span class="chip" style="align-self:center"><span class="dot"></span>End of Studies Defense · 2025–2026</span>
+      <h1 class="title grad" style="font-size:clamp(3rem,9.5vw,7rem);margin-top:2.4vh">Thank You</h1>
+      <p class="lead" style="margin:1.4vh auto 0;text-align:center">for your time and attention.</p>
+      <div class="seatrow" style="justify-content:center;margin-top:3vh">
+        <i class="v"></i><i class="t"></i><i></i><i class="v"></i><i class="v"></i><i class="t"></i><i></i><i class="t"></i><i class="v"></i><i class="t"></i><i></i><i class="v"></i>
+      </div>
+      <p class="sub" style="margin:3vh auto 0;text-align:center"><b>Adam Hmida Loghmari</b> &nbsp;·&nbsp; GetSeat — Real-time Event Management &amp; Ticketing SaaS &nbsp;·&nbsp; ENET'COM 2025–2026</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="foot">
+  <span class="brand"><b>GetSeat</b><span class="tagline">End of Studies Defense · Adam Hmida Loghmari</span></span>
+  <span class="pageno"><b id="cur">01</b><i>/</i><span class="tot" id="tot">26</span></span>
+</div>
+<div class="hint"><kbd>→</kbd> next · <kbd>←</kbd> back · <kbd>F</kbd> fullscreen · <kbd>O</kbd> overview</div>
+
+<script>
+(function(){
+  const deck = document.getElementById('deck');
+  const slides = Array.from(deck.querySelectorAll('.slide'));
+  const bar = document.getElementById('bar');
+  const curEl = document.getElementById('cur');
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('tot').textContent = pad(slides.length);
+  let i = 0;          // current slide
+  let step = 0;       // visible fragments in current slide
+
+  function frags(s){ return Array.from(s.querySelectorAll('.fragment')); }
+
+  function paint(){
+    slides.forEach((s,n)=>{
+      s.classList.remove('active','past');
+      if(n===i) s.classList.add('active');
+      else if(n<i) s.classList.add('past');
+      const f = frags(s);
+      f.forEach((el,k)=>el.classList.toggle('visible', n<i ? true : (n===i ? k<step : false)));
+    });
+    bar.style.width = (slides.length>1 ? (i/(slides.length-1))*100 : 100) + '%';
+    curEl.textContent = pad(i+1);
+  }
+
+  function next(){
+    const f = frags(slides[i]);
+    if(step < f.length){ step++; paint(); return; }
+    if(i < slides.length-1){ i++; step=0; paint(); }
+  }
+  function prev(){
+    if(step > 0){ step--; paint(); return; }
+    if(i > 0){ i--; step = frags(slides[i]).length; paint(); }
+  }
+  function go(n){ i=Math.max(0,Math.min(slides.length-1,n)); step=frags(slides[i]).length; paint(); }
+
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight','PageDown',' '].includes(e.key)){ e.preventDefault(); next(); }
+    else if(['ArrowLeft','PageUp'].includes(e.key)){ e.preventDefault(); prev(); }
+    else if(e.key==='ArrowDown'){ e.preventDefault(); if(i<slides.length-1) go(i+1); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); if(i>0) go(i-1); }
+    else if(e.key==='Home'){ go(0); }
+    else if(e.key==='End'){ go(slides.length-1); }
+    else if(e.key==='f'||e.key==='F'){ document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen(); }
+    else if(e.key==='o'||e.key==='O'){ toggleOverview(); }
+  });
+
+  document.getElementById('next').addEventListener('click',next);
+  document.getElementById('prev').addEventListener('click',prev);
+
+  // touch swipe
+  let tx=0;
+  deck.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+  deck.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>50){dx<0?next():prev();}},{passive:true});
+
+  // simple overview (press O)
+  let overview=false;
+  function toggleOverview(){
+    overview=!overview;
+    if(overview){
+      deck.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:24px;overflow:auto;height:100vh';
+      slides.forEach((s,n)=>{
+        s.style.cssText='position:relative;inset:auto;opacity:1;transform:scale(1);pointer-events:auto;height:150px;overflow:hidden;border:1px solid var(--line);border-radius:12px;cursor:pointer;padding:14px;background:#fff';
+        s.onclick=()=>{toggleOverview();go(n);};
+      });
+    } else {
+      deck.style.cssText='';
+      slides.forEach(s=>{s.style.cssText='';s.onclick=null;});
+      paint();
+    }
+  }
+
+  paint();
+})();
+</script>
+</body>
+</html>
