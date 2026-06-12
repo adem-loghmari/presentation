@@ -1,517 +1,190 @@
 ===============================================================================
- getseat — DEFENSE SPEAKER NOTES
+ GetSeat — DEFENSE SPEAKER NOTES  (clip-driven story · 33 slides · ~15 min)
  Real-time Event Management & Ticketing SaaS · Adam Hmida Loghmari · ENET'COM
 -------------------------------------------------------------------------------
- How to present:  open presentation/index.html in a browser, press F for
- fullscreen.  → / Space advances (it reveals bullets one at a time, then moves
- to the next slide).  ← goes back.  O = overview grid.  Slides are deliberately
- minimal — the depth lives in these notes.  Aim ~30-45s per slide; ~12-15 min total.
+ HOW IT WORKS NOW
+ No single long live demo. Act III is the product told as a story: 11 slides,
+ each with a SHORT LOOPING SCREEN-RECORDING (2-5 s, muted) that auto-plays and
+ restarts when you arrive. You just narrate over the loop for ~20-30 s, then move
+ on. Total "demo" time is spread across the talk, not one 5-minute block.
+
+ CONTROLS: open index.html, press F. → / Space / click = next slide; ← = back;
+ O = overview. Each slide appears fully (no bullet-by-bullet). One clean fade.
+
+ CLIPS: record/drop the 11 files in assets/clips/ (see assets/README.txt). Until
+ then a labeled placeholder shows, so you can rehearse timing today.
+
+ STORY ARC:  I Problem → II Blueprint → III Life of an event (clips) → IV Payoff
+ PACING:  dividers ~3 s · foundation slides ~30 s · clip slides ~20-30 s.
 ===============================================================================
 
 
-SLIDE 1 — TITLE
--------------------------------------------------------------------------------
-The title slide carries the institutional framing: the ENET'COM and United Systema
-logos, the University of Sfax header, the project title, your name, the full
-examination panel, and the defense date (12 June 2026).
-
+[1] TITLE
+ENET'COM + United Systema logos, University of Sfax header, title, your name, the
+full panel, and the date (12 June 2026).
 "Good morning. Honorable members of the jury — Dr. Moncef Triki, Dr. Ikram Amous —
 my academic supervisor Dr. Nidhal Ben Amor, and my industrial supervisor Mr. Anis
-Jerbi. My name is Adam Hmida Loghmari, and I'm pleased to present my end-of-studies
-project: getseat — a real-time event management and ticketing SaaS platform. It was
-designed, architected and fully implemented during my final-year engineering
-internship at United Systema, and it is deployed live in production at getseat.dev."
-
-One sentence hook: "The core idea of getseat is simple to say and hard to build —
-what an organizer draws on a canvas, a guest anywhere can book in real time."
-
-NOTE on logos: drop your two image files into presentation/assets/ named exactly
-enetcom.png and united-systema.png. Until then, clean styled text stand-ins show
-automatically.
-
-
-SLIDE 2 — AGENDA
--------------------------------------------------------------------------------
-"Here's the path. I'll start with the problem in event ticketing and why generic
-e-commerce fails. Then the stack and the headless architecture. Then the data
-model and access control. The heart of the project is the Venue Builder, so I'll
-spend real time there. Then the reservation and payment engine — the commercial
-core. Then security, the B2B SDK, and the DevOps pipeline. A short live demo, and
-I'll close with conclusions and where the platform goes next."
-
-Keep it quick — this is just a map.
-
-
-SLIDE 3 — HOST COMPANY (United Systema)
--------------------------------------------------------------------------------
-"The internship was hosted at United Systema, a technology-driven firm built on
-the belief that technology should be universally accessible — they position
-themselves as an enabler of growth for clients across industries."
-
-The three service domains (reveal one by one):
- - Web & Software Development — tailor-made apps from requirements to production.
- - Private Cloud Solutions — dedicated infrastructure, clients keep full control
-   of their data, independent of the public cloud.
- - Digital Transformation Advisory — turning legacy, paper-based, fragmented
-   workflows into unified automated pipelines.
-
-Close: "getseat was the internship deliverable — a real, production-ready SaaS,
-not a toy project. It runs live at getseat.dev behind an automated deployment
-pipeline."
-
-
-SLIDE 4 — CONTEXT: why generic e-commerce breaks
--------------------------------------------------------------------------------
-"Live events have two properties ordinary e-commerce ignores: they are SPATIAL
-and they are REAL-TIME. A product maps to an order; a seat does not. That gap
-creates four concrete pains for organizers:"
-
- - Fragmented tools — they use one app to design the layout, another to sell, a
-   third to scan at the door. Nothing talks to each other.
- - No spatial rendering — standard platforms can't draw a custom seating chart;
-   at best they overlay a static image, which can't carry per-seat pricing.
- - Race conditions — the key metric here is the latency of the seat lock: the gap
-   between a user picking a seat and that seat becoming unavailable to everyone
-   else. If that window is wide, two people buy the same seat. For commercial
-   ticketing that's a catastrophic failure.
- - Walled gardens — generic platforms charge high commissions and expose no
-   embeddable API, so organizers can't sell tickets on their own websites.
-
-"getseat exists to close all four."
-
-
-SLIDE 5 — PROBLEMATIC (the one question)
--------------------------------------------------------------------------------
-Let this slide breathe. Read it slowly:
-
-"So the whole project distills to one engineering question: How do you let an
-organizer draw a venue once, and let the world book it in real time — without
-ever double-booking a seat? Everything I show next is an answer to that sentence."
-
-
-SLIDE 6 — OBJECTIVES (the pipeline)
--------------------------------------------------------------------------------
-"The objective was a single seamless pipeline — what the organizer draws, the
-guest can book. Five stages:"
-
- - DESIGN  — an interactive Venue Builder in the browser.
- - PERSIST — that canvas serializes and migrates into a relational database.
- - RESERVE — guests book in real time, concurrency-safe.
- - PAY & ENTER — verified payment produces a QR ticket scanned at the door.
- - EMBED — and finally, expose all of this as a B2B product via an SDK and iframes.
-
-"Each arrow is a hard technical problem. Let me show how each was solved."
-
-
-SLIDE 7 — TECHNOLOGICAL STACK
--------------------------------------------------------------------------------
-"The stack is modern and deliberately decoupled."
-
- - Next.js 16 / React 19 — hybrid rendering: server-side for SEO-critical event
-   pages, client-side for the interactive canvas. UI on Material UI.
- - Konva.js — standard DOM can't efficiently render or hit-test thousands of
-   shapes; Konva gives a WebGL-accelerated 2D canvas with built-in transformer,
-   hit detection, and layer separation. This is what makes 60 FPS possible.
- - Laravel 12 / PHP 8.3 — chosen for Eloquent ORM and, crucially, first-class
-   database transactions and row locking — exactly what ACID-compliant ticketing
-   needs.
- - Reverb / Pusher — WebSocket broadcasting. Self-hosted Reverb in development,
-   Pusher in production for guaranteed availability. Laravel Echo on the client.
- - SkipCash — a regional gateway (QAR / GCC currencies) with HMAC-SHA256 signed
-   webhooks for cryptographic verification.
- - Spatie Permission — role-based access control on top of Laravel Auth.
-
-Don't read every line if short on time — name the front three and the back three.
-
-
-SLIDE 8 — ARCHITECTURE (headless)
--------------------------------------------------------------------------------
-"The architecture is headless — a decoupled model. The Next.js frontend is pure
-presentation; all logic, auth, and state live in the Laravel API. They talk over
-REST plus WebSockets, and MySQL sits behind with ACID transactions and
-pessimistic locks."
-
-Why it matters:
- - Frontend and API scale independently.
- - WebSockets replace HTTP polling — and that real-time channel is precisely
-   what eliminates double-booking in the live UI.
- - One business-logic layer serves three consumers at once: the web client,
-   embedded iframe widgets, and the partner SDK. We never duplicate logic.
-
-If asked monolithic vs decoupled: "A monolith server-renders views and polls; the
-decoupled model gives an interactive Konva canvas, real-time sync, and a reusable
-JSON API — at the cost of a distributed deployment, which the CD pipeline handles."
-
-
-SLIDE 9 — METHODOLOGY & METRICS
--------------------------------------------------------------------------------
-"Delivery was Agile Scrum — five sprints from early February to mid-May, branch-
-per-feature in Git."
-
-Walk the timeline lightly:
- - S1: API route structure, Sanctum auth, Spatie roles, core migrations.
- - S2: heavy Konva research (40+ hours), event policies, staff invitations.
- - S3: refactor the builder into hooks, the Magic-Wand labeler, multi-floor,
-   blueprint overlays.
- - S4: minimap, Best-Available algorithm, SkipCash, QR + PDF tickets.
- - S5: the security refactor, Pusher migration, viewport culling, the B2B SDK,
-   admin panel, and the CD pipeline.
-
-Then land the KPIs — these are the validation of the architecture:
- - 100% of double-bookings prevented under simultaneous checkout (via lockForUpdate).
- - Under 200 ms for a seat event to reach all connected clients.
- - A sustained 60 FPS while interacting with 1,000+ Konva shapes.
- - Under 100 ms average for the seat-availability endpoint.
-
-"These four numbers are the project's success criteria, and they were met."
-
-
-SLIDE 10 — DATA MODEL (hierarchy)
--------------------------------------------------------------------------------
-"Ticketing needs spatial and temporal awareness, so the schema enforces a strict
-four-level hierarchy:"
-
- - EVENT — the root: title, timezone-aware UTC dates, an owner, encrypted payment
-   credentials, and a many-to-many staff relationship via a pivot table.
- - VENUE TEMPLATE → VENUE — the template stores the pristine master layout as a
-   JSON blob; a Venue is an event-specific deployment of that template.
- - TIMESLOT — a venue can run multiple sessions (a 2pm and an 8pm show). Crucially,
-   it's the TimeSlot — not the Venue — that owns the Location records. That's how
-   availability is isolated per session.
- - LOCATION — the lowest unit: an individual bookable seat, table, or standing
-   area. It carries the shape_id from the canvas, a type, a capacity, and a parent.
-
-"On the transactional side there's a parallel chain: Reservation → Order →
-Transaction → Ticket → ScanLog — the full financial lifecycle from a temporary
-hold all the way to a scan at the gate."
-
-
-SLIDE 11 — ACCESS CONTROL (RBAC)
--------------------------------------------------------------------------------
-"Authorization works on two layers."
-
- - Platform roles (Spatie): user (a normal organizer), support (read-only admin
-   plus refunds), and super-admin (full authority — ban users, delete events,
-   monitoring).
- - Event-scoped roles (pivot table): within one event, a collaborator is a viewer
-   (dashboards, manual check-ins, door scanning — read only) or an editor (all of
-   that plus venue write access). Both are enforced server-side by Laravel Policies.
- - Magic-link invitations: an organizer invites by email; if the user exists they're
-   linked instantly, otherwise a 64-character token with a 7-day expiry is emailed.
- - Venue deletion is a deliberate two-step workflow: because a venue can have live
-   tickets, an editor can only REQUEST deletion; the owner must APPROVE. Nothing
-   with live reservations is destroyed without explicit consent.
-
-Pick two of the four if time is tight — the viewer/editor split and the deletion
-workflow are the strongest.
-
-
-SLIDE 12 — VENUE BUILDER (section opener)
--------------------------------------------------------------------------------
-"This is the technical nucleus of the whole platform — the Venue Builder. It's a
-production-grade, interactive 2D map editor built on Konva.js inside React 19.
-Organizers draw seats, zones, floors, and price categories, and that exact canvas
-becomes the live booking map. I want to show three things: how it stays fast, the
-smart tools on top, and how the drawing becomes database rows."
-
-Short pause — this is the centerpiece. If you have a screenshot/recording, show it.
-
-
-SLIDE 13 — VENUE BUILDER · PERFORMANCE
--------------------------------------------------------------------------------
-"A stadium-scale map can have over 5,000 interactive nodes. If you let React
-re-render that naïvely, the browser freezes. Three disciplines keep it at 60 FPS:"
-
- - Layer separation — the canvas is split into independent Konva layers: a static
-   grid that never re-renders, the interactive shape layer (the only one that
-   updates on edits), and a preview layer for ephemeral drawing feedback so a
-   mouse-move never re-renders real shapes.
- - Viewport culling — useDerivedVenueState computes the visible bounding box from
-   the stage's x, y, and scale; only shapes inside it are mounted. Everything off-
-   screen carries zero render and zero hit-test cost. There's also a hard cap of
-   4,000 rendered shapes per zone as a safety valve.
- - Memoization — every shape component is wrapped in React.memo, the rendered list
-   is useMemo'd, and handlers are stabilized with useCallback.
-
-"All of this is orchestrated by 16 specialized hooks — each owns exactly one
-concern: state, drawing, drag-and-snap, transformation, navigation, sync, and so
-on. That separation is what kept the most complex module maintainable."
-
-If asked about rotation math: "When you rotate a group, each shape's absolute x/y
-is recomputed with a 2D rotation matrix around the group's pivot — otherwise the
-hitbox drifts away from where the seat is drawn."
-
-
-SLIDE 14 — VENUE BUILDER · SMART TOOLS
--------------------------------------------------------------------------------
-"On top of the canvas are tools that remove the manual tedium:"
-
- - Magic-Wand auto-labeling — manually numbering thousands of seats is impossible.
-   The tool sorts selected seats by Y into rows (with a one-seat-diameter
-   tolerance), sorts each row left-to-right by X, then assigns Row A, B, C… and
-   numbers within each row. 500 seats labeled in under a second.
- - AI text-to-map — a non-technical organizer types, say, "a wedding layout with a
-   center stage, 10 round tables, and a VIP standing zone for 200." That prompt
-   goes to an LLM constrained to a strict JSON schema, which returns valid shape
-   objects with computed coordinates — injected straight into the canvas.
- - Minimap + grid snapping — a draggable viewport rectangle for navigating large
-   maps, and a 10-pixel grid snap so adjacent rows align perfectly with no manual
-   pixel-pushing.
- - Multi-floor + blueprints — floor tabs and zone drill-down for theatres and
-   arenas; and you can upload an architectural blueprint, trace your seats over it
-   as a semi-transparent background, then fade it to zero.
-
-Lead with Magic-Wand and AI text-to-map — those land best.
-
-
-SLIDE 15 — CANVAS → DATABASE (serialization)
--------------------------------------------------------------------------------
-"Now the bridge from a visual editor to strict storage."
-
- - The entire canvas serializes into one canvas_data JSON object — floors,
-   categories, shapes. It's deliberately flat and denormalized because during the
-   design phase it's cheap to write and read as a single blob.
- - On publish, the backend's syncLocations() migrates it in three passes:
-     1) categories  → PriceTier rows (updateOrCreate by ui_category_id),
-     2) bookable shapes → Location rows (keyed by shape_id),
-     3) a LocationPrice link between each location and its tier, then parent-child
-        relationships are resolved.
- - Because it keys on stable IDs, anything removed from the canvas — orphaned tiers
-   or locations — is pruned automatically. The JSON and the relational tables stay
-   in sync.
-
-"So the design phase is fast and fluid; the publish step is atomic and strict.
-This same method is reused when a B2B partner injects pricing via the SDK."
-
-
-SLIDE 16 — RESERVATION ENGINE (pessimistic locking)
--------------------------------------------------------------------------------
-"This directly answers the 'never double-book' question. When a guest locks a seat:"
-
- 1) A database transaction begins.
- 2) The specific Location row is fetched with lockForUpdate() — that tells MySQL
-    to block every other read and write on that row until this transaction commits.
- 3) The system counts active holds + sold tickets. If held + sold + requested >
-    capacity, it returns 409 Conflict immediately.
- 4) Otherwise it creates a Reservation with a 10-minute expiry tied to the user's
-    session token, and commits.
- 5) A second request that arrived mid-transaction is forced to WAIT; when it's
-    unblocked it sees the updated count and gets a 409. There is no window for a
-    race — the database itself serializes contention on that row.
-
-Add: "Expired reservations are pruned automatically by the Prunable trait and
-Laravel's scheduler. And availability is computed with aggregate counts —
-sold, locked-by-others, locked-by-me, and remaining — which is what keeps that
-endpoint under 100 ms even on large venues."
-
-If asked about idempotency: "For single-capacity seats, if you already hold it
-under your session token, the lock is skipped — so slow network retries don't
-create duplicate holds."
-
-
-SLIDE 17 — REAL-TIME SYNC (WebSockets)
--------------------------------------------------------------------------------
-"Database locks prevent double-booking at the data layer, but other users would
-see stale seats until they refresh. So we push state instantly with three
-broadcast events:"
-
- - SeatLocked — a seat was just reserved.
- - SeatUnlocked — a hold was cancelled or expired.
- - SeatSold — a payment was confirmed.
-
-Key points:
- - Each broadcasts on a per-timeslot channel (venue.{id}.timeslot.{id}) so the
-   evening show's events never bleed into the morning show's map.
- - They implement ShouldBroadcastNow — they bypass the queue for immediate delivery.
- - On the client, Laravel Echo + Pusher flip a seat from available to locked within
-   milliseconds on every connected screen.
- - The client cart is a state machine running the 10-minute countdown; when it
-   expires, seats are ejected from the UI and reverted. And a "Best Available"
-   algorithm auto-selects the best contiguous block of N seats — grouping by row,
-   preferring front rows for visibility.
-
-"This is the moment to demo two browsers side by side if possible."
-
-
-SLIDE 18 — PAYMENTS (never trust the browser)
--------------------------------------------------------------------------------
-"Payments are built on one principle: never trust the browser to confirm money."
-
-The four-step lifecycle:
- - INITIATE — decrypt the event's stored payment secrets, build the SkipCash
-   payload, sign it with HMAC-SHA256, POST to the gateway, create a Transaction
-   record, and return the payment URL.
- - REDIRECT — the guest pays on SkipCash's hosted page.
- - VERIFY — when they return, the SERVER polls SkipCash directly, server-to-server,
-   for the real status. The frontend is never trusted to self-report success.
- - FULFILL — tickets are issued only after that cryptographic confirmation.
-
-Add:
- - Payment secrets are encrypted at rest with Laravel's Crypt.
- - The layer is pluggable: a TransactionStatus enum normalizes each gateway's
-   vocabulary ("paid" → SUCCESS, "canceled" → FAILED…), so adding Stripe later
-   touches no controller code.
- - Free events use a native, gateway-free checkout — the order completes
-   immediately with no external redirect.
-
-
-SLIDE 19 — TICKETS & CHECK-IN
--------------------------------------------------------------------------------
-"After payment, the closing sequence:"
-
- - ISSUE — every reservation converts to a Ticket with a unique UUID barcode_hash;
-   the holds are deleted to free the lock, and a SeatSold event is broadcast.
- - DELIVER — a confirmation email is queued, and there's a server-rendered PDF
-   ticket download (via dompdf) showing event, venue, time slot, seat, and barcode.
- - SCAN — at the door, a browser-based QR scanner uses the device camera — no
-   proprietary hardware. The backend validates: invalid → 404, already scanned →
-   400, valid → marks it scanned and writes a ScanLog. It also checks the ticket
-   belongs to this event, preventing cross-event fraud.
- - ANALYZE — organizers get a live dashboard: total capacity, tickets sold, total
-   revenue, a 7-day sales-velocity chart, and ticket distribution by price tier.
-
-"So the platform automates the entire flow, from seat selection to venue entry."
-
-
-SLIDE 20 — SECURITY HARDENING
--------------------------------------------------------------------------------
-"Turning a prototype into a production SaaS meant hardening the auth layer."
-
- - The biggest change: we moved from Sanctum tokens in localStorage to HTTP-only,
-   Secure, SameSite cookies. localStorage is readable by any injected JavaScript —
-   an XSS bug could exfiltrate the token. An HTTP-only cookie is physically
-   invisible to JavaScript, so that theft vector is eliminated. For a platform
-   handling payments, that was non-negotiable.
- - CSRF: the API client calls GET /sanctum/csrf-cookie before every mutating
-   request, seeding the XSRF token Laravel validates — the standard SPA pattern.
- - Google OAuth 2.0 via Socialite for frictionless sign-in.
- - Embed tokens: inside an iframe, SameSite policies block the cookie session, so
-   embedded requests use a scoped Bearer token instead — and that path only
-   activates for /embed/ routes, keeping the security boundary clean.
-
-
-SLIDE 21 — B2B DEVELOPER SDK
--------------------------------------------------------------------------------
-"This is what turns getseat from an app into a white-label engine."
-
- - API keys are scoped to a partner:api ability; the plain token is shown once and
-   never stored — every SDK endpoint checks tokenCan('partner:api').
- - Five server-to-server endpoints under /v1/embed/ — create a session, publish a
-   venue from a template, confirm orders, and inject pricing categories.
- - The clever part is shadow users. A partner's customer has no getseat account.
-   So the partner calls /v1/embed/session with their own external_user_id; the
-   backend firstOrCreates a synthetic User keyed by (partner_id, external_user_id),
-   with a generated email and random password, and issues a 2-hour scoped embed
-   token. That user can lock seats, check out, and get tickets — completely proxied
-   through a managed identity, never forced to register.
- - Then the partner drops an iframe — /embed/reserve for the portal, /embed/builder
-   for white-label map editing — with a stripped layout and strict CORS.
-
-"publishPartnerVenue lets a partner provision an entire event, venue, and all its
-time slots from their own backend in one call."
-
-
-SLIDE 22 — DEVOPS AUTOMATION
--------------------------------------------------------------------------------
-"Deploying a decoupled architecture by hand is risky, so it's fully automated.
-Every push to the dev branch triggers a GitHub Actions pipeline:"
-
- 1) INIT — install PHP 8.3 with extensions and Node 22, inject secrets (Pusher,
-    SkipCash, DB) from GitHub Secrets, composer install optimized for production.
- 2) BUILD — npm ci for a reproducible install, then the Next.js production build.
- 3) TRANSFER — an SSH key authenticates to the DirectAdmin server; rsync --delete
-    pushes the Next.js out/ to the public web root and the Laravel backend/ to a
-    NON-public directory so source and .env are never web-accessible.
- 4) EXECUTE — on the server: restore permissions, clear and rebuild route/config/
-    view caches, and run migrate --force.
-
-"The whole thing, push to live, takes under four minutes with zero manual steps.
-Alongside it there's a three-tier admin panel — users, events, venues — and a
-real-time notification engine that keeps organizers and staff in sync on things
-like venue-deletion requests and roster changes."
-
-
-SLIDE 23 — DEMONSTRATION
--------------------------------------------------------------------------------
-"Let me show it working." Suggested 2-minute flow:
- 1) Open the Venue Builder, draw a small zone, drop a row of seats, hit Magic-Wand
-    to auto-label them, assign a VIP and a Standard category, and publish.
- 2) Open the guest reservation portal on TWO browser windows side by side.
- 3) Lock a seat in window A — watch it turn orange in window B instantly (the
-    SeatLocked broadcast).
- 4) Check out; for a paid event show the SkipCash redirect; for a free event show
-    the native checkout completing.
- 5) Open the resulting PDF/email ticket and scan its QR with the dashboard scanner
-    — show the "valid" then "already scanned" responses.
-
-If the live demo is risky, keep a screen recording as a fallback.
-
-
-SLIDE 24 — CONCLUSION
--------------------------------------------------------------------------------
-"To summarize what was delivered — a production-deployed full-stack SaaS:"
-
- - A draw-to-book pipeline: an interactive canvas that serializes into a strict
-   relational schema on publish.
- - Zero double-booking: pessimistic locks plus real-time WebSocket sync, validated
-   under concurrency.
- - Trustless payments: server-side verification, UUID barcodes, PDF + email
-   tickets, and QR check-in.
- - Commercial readiness: a B2B SDK with shadow users, embeddable iframes, an admin
-   panel, and automated continuous deployment.
-
-"The project shows how rigorous engineering and pragmatic architecture turn complex
-business requirements into a resilient, live product."
-
-
-SLIDE 25 — PERSPECTIVES
--------------------------------------------------------------------------------
-"The architecture was built to extend. Four directions:"
-
- - A React Native mobile app for guests and staff — the existing REST API already
-   serves the web and the SDK, so it needs minimal backend change.
- - Multi-gateway payments — Stripe, Flouci, Konnect — by implementing the existing
-   PaymentServiceInterface, with no controller changes.
- - AI-driven dynamic pricing — tiers that adjust automatically to real-time demand
-   velocity, using the sales analytics already in place.
- - Full multi-tenant scaling and production observability — branded agency
-   instances, plus centralized logging, error tracking, and performance monitoring.
-
-
-SLIDE 26 — THANK YOU / Q&A
--------------------------------------------------------------------------------
-"That's getseat. Thank you for your attention — I'm happy to take your questions."
+Jerbi. I'm Adam Hmida Loghmari, presenting GetSeat — a real-time event management
+and ticketing SaaS, built during my internship at United Systema and deployed live
+at getseat.dev." Hook: "What an organizer draws on a canvas, a guest anywhere can
+book in real time."
+
+[2] HOST COMPANY — United Systema
+Firm built on making technology universally accessible. Three domains: web &
+software; private cloud (clients keep control of their data); digital
+transformation. "GetSeat was the deliverable — a real production SaaS."
+
+[3] AGENDA — four acts
+"I'll tell this as a story: the problem, the blueprint, the life of an event shown
+live through short clips, and the payoff." ~10 seconds.
+
+------------------------------- ACT I · THE PROBLEM ---------------------------
+[4] DIVIDER. "First — why does this need a new platform?"
+
+[5] CONTEXT. "Ordinary e-commerce: a product maps to an order. A seat doesn't — it
+has a position and can be grabbed by two people at once." Four pains: fragmented
+tools, no spatial rendering, double-booking (a wide seat-lock window = catastrophe),
+walled gardens (commissions, no embeddable API).
+
+[6] PROBLEMATIC. Read slowly: "How do you let an organizer draw a venue once, and
+let the world book it in real time — without ever double-booking a seat?
+Everything that follows answers this one sentence." This is the spine.
+
+------------------------------ ACT II · THE BLUEPRINT -------------------------
+[7] DIVIDER. "Here's the shape of the answer."
+
+[8] STACK. "Modern and deliberately decoupled." Front: Next.js 16/React 19, Konva.js
+(why we hit 60 FPS). Back: Laravel 12/PHP 8.3 (chosen for ACID + row locking),
+Pusher/Reverb, SkipCash, Spatie. Name the front three and back three; don't read all.
+
+[9] ARCHITECTURE — table. "Headless: the browser draws, the server rules." Walk the
+rows; the State-sync row (polling vs WebSockets) is the one that kills double-booking.
+
+[10] DATA MODEL. Event → VenueTemplate/Venue → TimeSlot → Location. Key line: "the
+TimeSlot, not the Venue, owns the Locations — that's how availability is isolated
+per session." Transactional chain: Reservation → Order → Transaction → Ticket → ScanLog.
+
+[11] RBAC. Platform roles (user/support/super-admin) + event roles (viewer/editor)
+via Policies. Magic-link invites; two-step venue-deletion (editor requests, owner
+approves).
+
+-------------------- ACT III · THE LIFE OF AN EVENT (clips) -------------------
+[12] DIVIDER. "Now watch the product end to end — from an empty dashboard to a
+scanned ticket. Each step is a short clip." Point at the flow: Create · Build ·
+Schedule · Publish · Sell · Scan. The little progress rail at the top of each
+coming slide shows where we are (step N of 11).
+
+For every clip slide: let the loop run, say the ONE technical point, move on.
+~20-30 s each. Don't wait for the loop to "finish" — it just repeats.
+
+[13] CREATE EVENT (1/11). "It starts with an Event — the root entity: title, UTC
+dates, an owner, and the encrypted payment credentials live here."
+
+[14] BUILD THE VENUE (2/11). "The technical nucleus — a Konva.js canvas at 60 FPS
+via viewport culling and memoization. Magic-Wand labels 500 seats in under a
+second; AI text-to-map builds a layout from a sentence." (Your visual 'wow'.)
+
+[15] SCHEDULE SESSIONS (3/11). "A venue hosts multiple TimeSlots — a 2pm and an 8pm
+show. Each owns its OWN locations, so availability is isolated per session, each
+with its own sales window."
+
+[16] PUBLISH → SYNC (4/11). "Going public runs syncLocations() — it migrates the
+canvas JSON into Location and PriceTier rows in three passes, keyed on stable IDs,
+pruning anything you removed. This is the bridge from drawing to database."
+
+[17] PAYMENT SETUP (5/11). "The organizer plugs in SkipCash; keys are stored
+encrypted at rest. The gateway layer is pluggable, and free events use a native
+checkout with no redirect."
+
+[18] GUEST PORTAL (6/11). "Now the guest. The portal loads a live map — sold,
+locked, mine, remaining — in one snapshot under 100 ms. They pick a session, or hit
+Best-Available to auto-pick the best contiguous block."
+
+[19] SEAT LOCKING (7/11) ★ THE MONEY MOMENT. Slow down here. The clip shows a guest
+picking a seat: it's selected, the cart fills, and a "Releasing in 09:55" hold
+countdown starts. "This answers the whole problematic. The instant a seat is picked,
+lockForUpdate() inside an ACID transaction makes every rival wait, then return 409 —
+so the database itself prevents double-booking. The hold lasts 10 minutes — you can
+see the countdown — and a SeatLocked event broadcasts over Pusher to flip that seat
+on every other connected screen in under 200 ms." (The clip is single-window; if you
+want the literal two-screens-syncing shot, capture it on your own machine where the
+Pusher realtime channel is confirmed live — see the note at the end.)
+
+[20] PAYMENT (8/11). "Checkout redirects to SkipCash with an HMAC-signed payload.
+On return, the SERVER polls SkipCash for the real status — the browser is never
+trusted to confirm a payment. Tickets issue only on confirmation."
+
+[21] TICKET (9/11). "Each ticket gets a unique UUID barcode_hash, delivered as a
+queued HTML email and a downloadable PDF carrying the QR."
+
+[22] QR SCAN (10/11). "At the door, a browser-based QR scanner — no hardware. It
+rejects invalid or already-scanned tickets and writes a ScanLog. Watch: valid, then
+the same code again — already scanned."
+
+[23] DASHBOARD (11/11). "And the organizer sees it all live — capacity, tickets
+sold, revenue, a 7-day sales-velocity chart, and distribution by price tier. That's
+one event, end to end."
+
+------------------ PRODUCTION & COMMERCIAL (tail of Act III) ------------------
+[24] SECURITY. "To make it a product, we hardened it. The headline: Sanctum tokens
+moved out of localStorage into HTTP-only cookies — invisible to JavaScript, so the
+XSS theft vector is gone. Plus a CSRF handshake, Google OAuth, and scoped embed
+tokens for iframes."
+
+[25] B2B SDK (docs screenshot). "GetSeat is also a white-label engine. Shadow users
+let a partner's customer be proxied through a managed identity with no GetSeat
+account; embeddable iframes and a documented REST SDK let partners publish venues
+and confirm orders from their own backend." (Gesture at the docs screenshot.)
+
+[26] DEVOPS. "Every push to dev triggers a GitHub Actions pipeline: init, build,
+rsync transfer (public out/ + private backend/), then cache rebuild and migrate on
+the server. Push to live in under four minutes, zero manual steps." Mention the
+admin panel + notification engine.
+
+------------------------------- ACT IV · THE PAYOFF --------------------------
+[27] DIVIDER. "So — how was it built, and how does it perform?"
+
+[28] METHODOLOGY. "Agile Scrum, five sprints, February to mid-May." Glance across;
+note Konva research (S2), payments/QR (S4), security + SDK + CD (S5).
+
+[29] RESULTS. Land the four — these are the success criteria: 100% double-booking
+prevented; <200 ms broadcast; 60 FPS with 1,000+ shapes; <100 ms availability API.
+"Measured, not estimated."
+
+[30] CONCLUSION. Tie back to slide 6. "We set out to let an organizer draw a venue
+once and let the world book it in real time without double-booking — and that runs
+today at getseat.dev." Four pillars on screen.
+
+[31] PERSPECTIVES. Mobile app on the existing API; multi-gateway payments via the
+existing interface; AI dynamic pricing; full multi-tenancy + observability.
+
+[32] Q & A. "Thank you — I'm happy to take your questions."
+
+[33] THANK YOU. Hold it; smile.
 
 -------------------------------------------------------------------------------
-LIKELY QUESTIONS & QUICK ANSWERS
+DEMO / CLIP TIPS
 -------------------------------------------------------------------------------
-Q: Pessimistic vs optimistic locking — why pessimistic?
-A: Ticket drops are high-contention on the SAME seat. Optimistic locking would
-   retry-storm under that load; pessimistic locking serializes contention at the
-   row and gives a clean, immediate 409 — simpler and correct for this workload.
+- Clips auto-play muted and loop; you never click 'play'. If a clip is missing the
+  slide shows a labeled placeholder, so rehearse anytime.
+- The ONLY clip that must be perfect is slide 19 (two windows, real-time locking) —
+  it's the proof of your thesis. Record it cleanly: lock on the left, watch the
+  right grey out. If you can also show the 409 on a second attempt, even better.
+- Keep clips 2-5 s and end near where they start so the loop is seamless.
+- If the room laptop struggles, clips on inactive slides are paused automatically;
+  only the visible slide's clip runs.
 
-Q: What if the WebSocket connection drops?
-A: The DB lock is the source of truth, so correctness never depends on the socket.
-   The portal can re-fetch availability; the socket is an optimization for instant
-   UI, not for safety.
-
-Q: Why store the canvas as one JSON blob instead of normalized rows from the start?
-A: During design the layout changes constantly — writing one blob is far cheaper
-   than thousands of row updates. Normalization happens once, atomically, at publish
-   via syncLocations(), which is when strict relational integrity actually matters.
-
-Q: How do you guarantee a paid order isn't faked?
-A: The browser never reports payment status. We poll the gateway server-to-server
-   and only issue tickets on the provider's confirmation; secrets are encrypted at
-   rest and webhooks are HMAC-signed.
-
-Q: How are shadow users prevented from leaking across partners?
-A: They're keyed by a composite (partner_id, external_user_id), the embed token is
-   scoped and short-lived (2h), and ownership-chain checks verify a template/venue
-   belongs to the calling partner before any publish.
-
-Q: Did you measure the KPIs or estimate them?
-A: Measured under the validation methodology — concurrency was verified with
-   simulated simultaneous bookings (zero double-booking), broadcast latency and API
-   response were timed, and 60 FPS was confirmed while interacting with 1,000+ shapes.
+LIKELY QUESTIONS
+- Pessimistic vs optimistic locking? High contention on the SAME row — optimistic
+  would retry-storm; pessimistic serializes it and returns an immediate clean 409.
+- WebSocket drops? The DB lock is the source of truth; correctness never depends on
+  the socket — the portal just re-fetches availability.
+- Why one JSON blob then migrate? Design changes constantly; one blob is cheap,
+  normalization happens once at publish via syncLocations().
+- Faked "paid" order? Browser never reports status; we poll the gateway
+  server-to-server; secrets encrypted, webhooks HMAC-signed.
+- Shadow-user isolation? Composite (partner_id, external_user_id); scoped 2-hour
+  token; ownership-chain checks before any publish.
+- KPIs measured? Yes — simulated concurrent bookings (zero double-booking), timed
+  latency/API, 60 FPS confirmed with 1,000+ shapes.
 ===============================================================================
