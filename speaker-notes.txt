@@ -1,10 +1,10 @@
 ===============================================================================
- GetSeat — DEFENSE SPEAKER NOTES  (clip-driven story · 33 slides · ~15 min)
+ GetSeat — DEFENSE SPEAKER NOTES  (clip-driven story · 34 slides · ~15 min)
  Real-time Event Management & Ticketing SaaS · Adam Hmida Loghmari · ENET'COM
 -------------------------------------------------------------------------------
  HOW IT WORKS NOW
- No single long live demo. Act III is the product told as a story: 11 slides,
- each with a SHORT LOOPING SCREEN-RECORDING (2-5 s, muted) that auto-plays and
+ No single long live demo. Part III (Technical Foundation) shows the platform live
+ as 11 slides, each with a SHORT LOOPING SCREEN-RECORDING (2-5 s, muted) that auto-plays and
  restarts when you arrive. You just narrate over the loop for ~20-30 s, then move
  on. Total "demo" time is spread across the talk, not one 5-minute block.
 
@@ -14,7 +14,8 @@
  CLIPS: record/drop the 11 files in assets/clips/ (see assets/README.txt). Until
  then a labeled placeholder shows, so you can rehearse timing today.
 
- STORY ARC:  I Problem → II Blueprint → III Life of an event (clips) → IV Payoff
+ OUTLINE:  I General Introduction → II Problematic → III Technical Foundation
+ (foundations · the platform live, in clips · production) → IV Results & Conclusions
  PACING:  dividers ~3 s · foundation slides ~30 s · clip slides ~20-30 s.
 ===============================================================================
 
@@ -29,78 +30,83 @@ and ticketing SaaS, built during my internship at United Systema and deployed li
 at getseat.dev." Hook: "What an organizer draws on a canvas, a guest anywhere can
 book in real time."
 
-[2] HOST COMPANY — United Systema
+[2] OUTLINE — four parts
+"The talk runs in four parts: the general introduction, the problematic, the
+technical foundation — including the platform shown live through short clips — and
+the results and conclusions." ~10 seconds.
+
+------------------------- PART I · GENERAL INTRODUCTION ------------------------
+[3] DIVIDER (Part I). "First, a word on where this was built." ~3 s. Sets up the
+host company.
+
+[4] HOST COMPANY — United Systema
 Firm built on making technology universally accessible. Three domains: web &
 software; private cloud (clients keep control of their data); digital
 transformation. "GetSeat was the deliverable — a real production SaaS."
 
-[3] AGENDA — four acts
-"I'll tell this as a story: the problem, the blueprint, the life of an event shown
-live through short clips, and the payoff." ~10 seconds.
+-------------------------------- PART II · PROBLEMATIC -------------------------
+[5] DIVIDER (Part II). "Why does this need a new platform?"
 
-------------------------------- ACT I · THE PROBLEM ---------------------------
-[4] DIVIDER. "First — why does this need a new platform?"
-
-[5] CONTEXT. "Ordinary e-commerce: a product maps to an order. A seat doesn't — it
+[6] CONTEXT. "Ordinary e-commerce: a product maps to an order. A seat doesn't — it
 has a position and can be grabbed by two people at once." Four pains: fragmented
 tools, no spatial rendering, double-booking (a wide seat-lock window = catastrophe),
 walled gardens (commissions, no embeddable API).
 
-[6] PROBLEMATIC. Read slowly: "How do you let an organizer draw a venue once, and
+[7] PROBLEMATIC. Read slowly: "How do you let an organizer draw a venue once, and
 let the world book it in real time — without ever double-booking a seat?
 Everything that follows answers this one sentence." This is the spine.
 
------------------------------- ACT II · THE BLUEPRINT -------------------------
-[7] DIVIDER. "Here's the shape of the answer."
+-------------------------- PART III · TECHNICAL FOUNDATION ---------------------
+[8] DIVIDER (Part III). "Here's the shape of the answer — architecture first."
 
-[8] STACK. "Modern and deliberately decoupled." Front: Next.js 16/React 19, Konva.js
+[9] STACK. "Modern and deliberately decoupled." Front: Next.js 16/React 19, Konva.js
 (why we hit 60 FPS). Back: Laravel 12/PHP 8.3 (chosen for ACID + row locking),
 Pusher/Reverb, SkipCash, Spatie. Name the front three and back three; don't read all.
 
-[9] ARCHITECTURE — table. "Headless: the browser draws, the server rules." Walk the
+[10] ARCHITECTURE — table. "Headless: the browser draws, the server rules." Walk the
 rows; the State-sync row (polling vs WebSockets) is the one that kills double-booking.
 
-[10] DATA MODEL. Event → VenueTemplate/Venue → TimeSlot → Location. Key line: "the
+[11] DATA MODEL. Event → VenueTemplate/Venue → TimeSlot → Location. Key line: "the
 TimeSlot, not the Venue, owns the Locations — that's how availability is isolated
 per session." Transactional chain: Reservation → Order → Transaction → Ticket → ScanLog.
 
-[11] RBAC. Platform roles (user/support/super-admin) + event roles (viewer/editor)
+[12] RBAC. Platform roles (user/support/super-admin) + event roles (viewer/editor)
 via Policies. Magic-link invites; two-step venue-deletion (editor requests, owner
 approves).
 
--------------------- ACT III · THE LIFE OF AN EVENT (clips) -------------------
-[12] DIVIDER. "Now watch the product end to end — from an empty dashboard to a
-scanned ticket. Each step is a short clip." Point at the flow: Create · Build ·
+------------ TECHNICAL FOUNDATION · THE PLATFORM IN ACTION (clips) -------------
+[13] DIVIDER (sub-section). "Now watch the platform end to end — from an empty
+dashboard to a scanned ticket. Each step is a short clip." Point at the flow: Create · Build ·
 Schedule · Publish · Sell · Scan. The little progress rail at the top of each
 coming slide shows where we are (step N of 11).
 
 For every clip slide: let the loop run, say the ONE technical point, move on.
 ~20-30 s each. Don't wait for the loop to "finish" — it just repeats.
 
-[13] CREATE EVENT (1/11). "It starts with an Event — the root entity: title, UTC
+[14] CREATE EVENT (1/11). "It starts with an Event — the root entity: title, UTC
 dates, an owner, and the encrypted payment credentials live here."
 
-[14] BUILD THE VENUE (2/11). "The technical nucleus — a Konva.js canvas at 60 FPS
+[15] BUILD THE VENUE (2/11). "The technical nucleus — a Konva.js canvas at 60 FPS
 via viewport culling and memoization. Magic-Wand labels 500 seats in under a
 second; AI text-to-map builds a layout from a sentence." (Your visual 'wow'.)
 
-[15] SCHEDULE SESSIONS (3/11). "A venue hosts multiple TimeSlots — a 2pm and an 8pm
+[16] SCHEDULE SESSIONS (3/11). "A venue hosts multiple TimeSlots — a 2pm and an 8pm
 show. Each owns its OWN locations, so availability is isolated per session, each
 with its own sales window."
 
-[16] PUBLISH → SYNC (4/11). "Going public runs syncLocations() — it migrates the
+[17] PUBLISH → SYNC (4/11). "Going public runs syncLocations() — it migrates the
 canvas JSON into Location and PriceTier rows in three passes, keyed on stable IDs,
 pruning anything you removed. This is the bridge from drawing to database."
 
-[17] PAYMENT SETUP (5/11). "The organizer plugs in SkipCash; keys are stored
+[18] PAYMENT SETUP (5/11). "The organizer plugs in SkipCash; keys are stored
 encrypted at rest. The gateway layer is pluggable, and free events use a native
 checkout with no redirect."
 
-[18] GUEST PORTAL (6/11). "Now the guest. The portal loads a live map — sold,
+[19] GUEST PORTAL (6/11). "Now the guest. The portal loads a live map — sold,
 locked, mine, remaining — in one snapshot under 100 ms. They pick a session, or hit
 Best-Available to auto-pick the best contiguous block."
 
-[19] SEAT LOCKING (7/11) ★ THE MONEY MOMENT. Slow down here. The clip shows a guest
+[20] SEAT LOCKING (7/11) ★ THE MONEY MOMENT. Slow down here. The clip shows a guest
 picking a seat: it's selected, the cart fills, and a "Releasing in 09:55" hold
 countdown starts. "This answers the whole problematic. The instant a seat is picked,
 lockForUpdate() inside an ACID transaction makes every rival wait, then return 409 —
@@ -110,64 +116,64 @@ on every other connected screen in under 200 ms." (The clip is single-window; if
 want the literal two-screens-syncing shot, capture it on your own machine where the
 Pusher realtime channel is confirmed live — see the note at the end.)
 
-[20] PAYMENT (8/11). "Checkout redirects to SkipCash with an HMAC-signed payload.
+[21] PAYMENT (8/11). "Checkout redirects to SkipCash with an HMAC-signed payload.
 On return, the SERVER polls SkipCash for the real status — the browser is never
 trusted to confirm a payment. Tickets issue only on confirmation."
 
-[21] TICKET (9/11). "Each ticket gets a unique UUID barcode_hash, delivered as a
+[22] TICKET (9/11). "Each ticket gets a unique UUID barcode_hash, delivered as a
 queued HTML email and a downloadable PDF carrying the QR."
 
-[22] QR SCAN (10/11). "At the door, a browser-based QR scanner — no hardware. It
+[23] QR SCAN (10/11). "At the door, a browser-based QR scanner — no hardware. It
 rejects invalid or already-scanned tickets and writes a ScanLog. Watch: valid, then
 the same code again — already scanned."
 
-[23] DASHBOARD (11/11). "And the organizer sees it all live — capacity, tickets
+[24] DASHBOARD (11/11). "And the organizer sees it all live — capacity, tickets
 sold, revenue, a 7-day sales-velocity chart, and distribution by price tier. That's
 one event, end to end."
 
------------------- PRODUCTION & COMMERCIAL (tail of Act III) ------------------
-[24] SECURITY. "To make it a product, we hardened it. The headline: Sanctum tokens
+------------ PRODUCTION & COMMERCIAL (within Technical Foundation) -------------
+[25] SECURITY. "To make it a product, we hardened it. The headline: Sanctum tokens
 moved out of localStorage into HTTP-only cookies — invisible to JavaScript, so the
 XSS theft vector is gone. Plus a CSRF handshake, Google OAuth, and scoped embed
 tokens for iframes."
 
-[25] B2B SDK (docs screenshot). "GetSeat is also a white-label engine. Shadow users
+[26] B2B SDK (docs screenshot). "GetSeat is also a white-label engine. Shadow users
 let a partner's customer be proxied through a managed identity with no GetSeat
 account; embeddable iframes and a documented REST SDK let partners publish venues
 and confirm orders from their own backend." (Gesture at the docs screenshot.)
 
-[26] DEVOPS. "Every push to dev triggers a GitHub Actions pipeline: init, build,
+[27] DEVOPS. "Every push to dev triggers a GitHub Actions pipeline: init, build,
 rsync transfer (public out/ + private backend/), then cache rebuild and migrate on
 the server. Push to live in under four minutes, zero manual steps." Mention the
 admin panel + notification engine.
 
-------------------------------- ACT IV · THE PAYOFF --------------------------
-[27] DIVIDER. "So — how was it built, and how does it perform?"
+----------------------- PART IV · RESULTS & CONCLUSIONS -----------------------
+[28] DIVIDER (Part IV). "So — how was it built, and how does it perform?"
 
-[28] METHODOLOGY. "Agile Scrum, five sprints, February to mid-May." Glance across;
+[29] METHODOLOGY. "Agile Scrum, five sprints, February to mid-May." Glance across;
 note Konva research (S2), payments/QR (S4), security + SDK + CD (S5).
 
-[29] RESULTS. Land the four — these are the success criteria: 100% double-booking
+[30] RESULTS. Land the four — these are the success criteria: 100% double-booking
 prevented; <200 ms broadcast; 60 FPS with 1,000+ shapes; <100 ms availability API.
 "Measured, not estimated."
 
-[30] CONCLUSION. Tie back to slide 6. "We set out to let an organizer draw a venue
+[31] CONCLUSION. Tie back to slide 7. "We set out to let an organizer draw a venue
 once and let the world book it in real time without double-booking — and that runs
 today at getseat.dev." Four pillars on screen.
 
-[31] PERSPECTIVES. Mobile app on the existing API; multi-gateway payments via the
+[32] PERSPECTIVES. Mobile app on the existing API; multi-gateway payments via the
 existing interface; AI dynamic pricing; full multi-tenancy + observability.
 
-[32] Q & A. "Thank you — I'm happy to take your questions."
+[33] Q & A. "Thank you — I'm happy to take your questions."
 
-[33] THANK YOU. Hold it; smile.
+[34] THANK YOU. Hold it; smile.
 
 -------------------------------------------------------------------------------
 DEMO / CLIP TIPS
 -------------------------------------------------------------------------------
 - Clips auto-play muted and loop; you never click 'play'. If a clip is missing the
   slide shows a labeled placeholder, so rehearse anytime.
-- The ONLY clip that must be perfect is slide 19 (two windows, real-time locking) —
+- The ONLY clip that must be perfect is slide 20 (two windows, real-time locking) —
   it's the proof of your thesis. Record it cleanly: lock on the left, watch the
   right grey out. If you can also show the 409 on a second attempt, even better.
 - Keep clips 2-5 s and end near where they start so the loop is seamless.
